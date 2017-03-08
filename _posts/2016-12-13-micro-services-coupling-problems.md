@@ -7,7 +7,7 @@ categories: micro-services coupling problems kafka data pipeline
 ---
 ## Abstract
 
-Following the micro-services architecture implies that each service has its own private datastore, specific to its own needs (SQL DB, cache DB, document store, etc). This architecture has lots of benefits we won't detailed here. But it also creates new challenges.
+Following the micro-services architecture implies that each service has its own private data store, specific to its own needs (SQL DB, cache DB, document store, etc). This architecture has lots of benefits we won't detail here. But it also creates new challenges.
 
 How do you implement business transactions that are consistent between your services?
 
@@ -21,11 +21,11 @@ In a monolithic application, components invoke each other via its language funct
 
 ![Schema 1]({{ site.url }}/assets/2016-12-13-schema-1.png "Uber-like product micro-services architecture")
 
-*The schema above is a simplified representation of an Uber-like product, a common way of implementing a micro-service architecture. It's omitting lots of blocks & relations for clarity.*
+*The schema above is a simplified representation of an Uber-like product, a common way of implementing a micro-service architecture.*
 
 > You can note my special design skill
 
-Each service aims to solve one business logic, has its own private datastore and expose a few methods through an API.
+Each service aims to solve one business logic, has its own private data store and expose a few methods through an API.
 
 Generally, the exposed APIs and services IPC are done through web services (usually REST HTTP Request / Response mechanism).
 
@@ -39,9 +39,9 @@ We can pretty easily see that, despite micro-services architecture benefits, it 
 - A client service must know the location of each (new) service instance
 - ...
 
-The schema above is omitting lots of relations to keep it readable. But one can imagine the increasing complexity when adding new services, services communication between each other and the outer-world, etc.
+The schema above is skipping lots of relations to keep it readable. But one can imagine the increasing complexity when adding new services, services communication between each other and the outer-world, etc.
 
-An ideal micro-service is *independent* and can *evolve on it's own*. This architecture naturally pushes us away from shared mutable states. To successfully implement a *scalable micro-service architecture*, we need to embrace it and communicate as much as reasonably possible in an *asynchronous real-time manner*.
+An ideal micro-service is *independent* and can *evolve on its own*. This architecture naturally pushes us away from shared mutable states. To successfully implement a *scalable micro-service architecture*, we need to embrace it and communicate as much as reasonably possible in an *asynchronous real-time manner*.
 
 ## Event-based micro-service architecture & data management
 
@@ -55,7 +55,7 @@ Except if you introduce a data log pipeline in your architecture.
 
 A data log pipeline, also called streaming log pipeline, is basically an append only immutable commit log.
 
-> A commit log is an old simple concept used in almost every databases. It is called WAL log for PostgreSQL or binary log for MySQL. It basically register every transaction (INSERT, UPDATE, DELETE...) as a commit log and can assure the ACIDity of the transaction, and can replay it in case of failure. This exact same mechanism is also at the heart of most of databases replication mechanism when you add new replicas or followers.
+> A commit log is an old simple concept used in almost every databases. It is called WAL log for PostgreSQL or binary log for MySQL. It basically registers every transaction (INSERT, UPDATE, DELETE...) as a commit log and can assure the ACIDity of the transaction, and can replay it in case of failure. This exact same mechanism is also at the heart of most databases replication mechanism when you add new replicas or followers.
 
 The "real data" is this commit log. Once the commit acknowledged, the DB will then transform this data into a particular view, specific to itself. PostgreSQL is storing and indexing data differently than MySQL, and in a complete different way for a NoSQL database. Nonetheless, the real data is the raw transaction log itself, and not the representation of it. This is a fundamental concept to understand, in order to follow the rest of this article.
 
@@ -67,7 +67,7 @@ The streaming pipeline allows the ingestion of the different transactions or mes
 
 ### The Ride example
 
-Let's say the client in the first schema sends a REST request letting the system know that his ride is finished to the Ride Service. We then need to invoke the Billing Service, with some informations like the length of the trip and the user.
+Let's say the client in the first schema sends a REST request letting the system know that his ride is finished to the Ride Service. We then need to invoke the Billing Service, with some information like the length of the trip and the user.
 
 With a REST interface, let's say that the Ride Service would need to wait for a response from the Billing Service before responding to the client.
 
@@ -83,7 +83,7 @@ The Ride Service applies its business logic (1) and invoke a publisher which wil
 
 The Ride Service is now loosely coupled to the Billing Service and it is only dependent on the data pipeline uptime and performance, which is largely superior to the Billing Service. The Ride Service does not even need to know the Billing Service exists or how to use its API!
 
-The Billing Service will probably need some extra informations about the ride or the user. Some subscribers (4) can pull data from the pipeline different queues and join data to produce a new enhance commit log. This is called streaming processing (ex: Spark Streaming, Samza, ...). For example, we could have a worker that will enhance the ride event, joining the `user_id` with data from the `user queue` of the system. It will then publish this joined data event to a new queue (5) which will be consumed by the Billing Service subscribers (6).
+The Billing Service will probably need some extra information about the ride or the user. Some subscribers (4) can pull data from the pipeline different queues and join data to produce a new enhance commit log. This is called streaming processing (ex: Spark Streaming, Samza, ...). For example, we could have a worker that will enhance the ride event, joining the `user_id` with data from the `user queue` of the system. It will then publish this joined data event to a new queue (5) which will be consumed by the Billing Service subscribers (6).
 
 Once the Billing Service successfully processed the ride event, then it could emit its own billing event, and the Notification Service would catch it up and send a notification back to the user for example.
 
@@ -95,7 +95,7 @@ Well, keep in mind that the "data log pipeline" block is schematic and it really
 
 Obviously, to clear these concerns, the pipeline must have the following attributes: very high availability, scalability, concurrent, stateful, distributed & fault tolerant, high throughput and low latency.
 
-Let's detailed this pipeline requirements list a bit more:
+Let's take a more detailed look at these requirements:
 - High availability: it must be up and responding all the time, without downtime
 - High scalability: it must be infinitely extendable by adding new server nodes and disks
 - Concurrent: it must accepts an infinite number of clients
@@ -121,7 +121,7 @@ Synchronous accesses are replaced by an asynchronous mechanism, injecting and co
 
 Using this mechanism, unpredictable spike loads are absorbed by the queuing system, and all micro-services stands up still.
 
-You might wonder if this commit log collection process couldn't add any new pressure to the datastore. As stated earlier, this is the same mechanism used to replicate the master DB to *n* followers. It's very efficient and does not impact the master since it's the followers' task to read the master commit log at their own pace.
+You might wonder if this commit log collection process couldn't add any new pressure to the data store. As stated earlier, this is the same mechanism used to replicate the master DB to *n* followers. It's very efficient and does not impact the master since it's the followers' task to read the master commit log at their own pace.
 
 This shift towards asynchronous access to data requires implementation changes and some business logic changes. But the implementation work is deported to the publishers and subscribers workers only, and does not impact the end service you are publishing to, but only the service you are working on.
 
@@ -137,11 +137,11 @@ The data pipeline also comes with some security features, to communicate with it
 
 **4) Extra benefits**
 
-Lastly, it makes raw data available to everyone. That means you can easily evolve your system by adding new services, but also new complete systems like an Hadoop data lake, a real-time monitoring engine, a second search engine to compare it with the current one, perform a seamless DB migration or put up a one time graph DB for analysis. Possibilities are endless here.
+Lastly, it makes raw data available to everyone. That means you can easily evolve your system by adding new services, but also new complete systems like a Hadoop data lake, a real-time monitoring engine, a second search engine to compare it with the current one, perform a seamless DB migration or put up a one time graph DB for analysis. Possibilities are endless here.
 
 These situations arise all the time, as your company, product and team evolve over time. But usually, adding a new brick to your system is painful and slow, as your data is exploded into a wide range of inaccessible systems and formats. With this data pipeline, not only you have access to all the data immediately, you also don't put extra pressure on existing systems at all.
 
-One of the huge benefits of the commit log is that you can rewind and replay the states of your data since the beginning. You can add a new analytics system and still be able to analyze data from the past or through the window of time you desire.
+One of the huge benefits of the commit log is that you can rewind and replay the states of your data since the beginning. You can add a new analytic system and still be able to analyze data from the past or through the window of time you desire.
 
 You can also plug some real-time processing engine on it, ingesting and working on data as it arrives.
 
