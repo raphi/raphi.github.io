@@ -1,6 +1,8 @@
 ---
-title:  "Micro-services coupling problems"
-date:   2016-12-13 14:45:42 +0100
+layout: post
+date: 2016-12-13 14:45:42 +0100
+title: 'Micro-services coupling problems'
+comments: true
 categories: micro-services coupling problems kafka data pipeline
 ---
 ## Abstract
