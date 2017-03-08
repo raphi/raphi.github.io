@@ -1,5 +1,4 @@
 ---
-layout: post
 date: '2012-07-22T14:50:00+02:00'
 title: 'Improve Redis performance: simultaneous max clients'
 description: 'How to increase Redis maximum clients number'
