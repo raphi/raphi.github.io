@@ -1,13 +1,14 @@
 ---
 layout: post
 date: 2016-12-13 14:45:42 +0100
-title: 'Micro-services coupling problems'
+title: Microservices coupling problems examples
 comments: true
-categories: micro-services coupling problems kafka data pipeline
+categories: microservices coupling problems kafka data pipeline
+description:
 ---
 ## Abstract
 
-Following the micro-services architecture implies that each service has its own private data store, specific to its own needs (SQL DB, cache DB, document store, etc). This architecture has lots of benefits we won't detail here. But it also creates new challenges.
+Following the microservices architecture implies that each service has its own private data store, specific to its own needs (SQL DB, cache DB, document store, etc). This architecture has lots of benefits we won't detail here. But it also creates new challenges.
 
 How do you implement business transactions that are consistent between your services?
 
@@ -15,11 +16,11 @@ How do you query, access and join data across the different services without add
 
 How do you minimize services dependencies?
 
-## Micro-services architecture problems
+## Microservices architecture problems
 
-In a monolithic application, components invoke each other via its language function calls. On the other hand, a micro-services architecture is a distributed system, running on different machines (potentially in different languages), which each service is communicating with each other via an Inter-Process Communication (IPC) mechanism.
+In a monolithic application, components invoke each other via its language function calls. On the other hand, a microservices architecture is a distributed system, running on different machines (potentially in different languages), which each service is communicating with each other via an Inter-Process Communication (IPC) mechanism.
 
-![Schema 1]({{ site.url }}/assets/2016-12-13-schema-1.png "Uber-like product micro-services architecture")
+![Schema 1]({{ site.url }}/assets/2016-12-13-schema-1.png "Uber-like product microservices architecture")
 
 *The schema above is a simplified representation of an Uber-like product, a common way of implementing a micro-service architecture.*
 
@@ -29,7 +30,7 @@ Each service aims to solve one business logic, has its own private data store an
 
 Generally, the exposed APIs and services IPC are done through web services (usually REST HTTP Request / Response mechanism).
 
-We can pretty easily see that, despite micro-services architecture benefits, it adds lots of scalability issues:
+We can pretty easily see that, despite microservices architecture benefits, it adds lots of scalability issues:
 - HTTP Request / Response is inherently a synchronous blocking mechanism
 - Adding new services generates exponential dependencies between services and increases services & DB pressure
 - A micro-service is as slow as the slowest micro-service in your call chain
@@ -111,7 +112,7 @@ This data log pipeline helps us with the concerns stated in the previous paragra
 
 Each service would connect its own commit log by publishing events to the data log pipeline. Then, any service that needs access to some specific data would implement a worker subscribing to the wanted events and act on them.
 
-This would decouple the services dependencies. They won't require any new endpoint to be implemented to access / retrieve service specific data. The micro-services are acting independently, working primary on their own business logic and they do not need to know the existence of the other services.
+This would decouple the services dependencies. They won't require any new endpoint to be implemented to access / retrieve service specific data. The microservices are acting independently, working primary on their own business logic and they do not need to know the existence of the other services.
 
 **2) [_Under Pressure_](https://open.spotify.com/track/2fuCquhmrzHpu5xcA1ci9x){:target='_blank'}**
 
@@ -119,7 +120,7 @@ Since services are now really decoupled and they are not querying or waiting on 
 
 Synchronous accesses are replaced by an asynchronous mechanism, injecting and consuming data at their own rate. This is an ideal situation though. In reality, as we can see on the second schema, there are still some synchronous calls (ex: HTTP Requests / Responses from an external client). This situation is fine for external clients, but should be much avoided between services themselves. Instead, the service should publish an event of the action it just did and let subscribers listen and respond to it. If there is still a need for a direct synchronous call, then the way services have been split up into must be rethought.
 
-Using this mechanism, unpredictable spike loads are absorbed by the queuing system, and all micro-services stands up still.
+Using this mechanism, unpredictable spike loads are absorbed by the queuing system, and all microservices stands up still.
 
 You might wonder if this commit log collection process couldn't add any new pressure to the data store. As stated earlier, this is the same mechanism used to replicate the master DB to *n* followers. It's very efficient and does not impact the master since it's the followers' task to read the master commit log at their own pace.
 
@@ -127,11 +128,11 @@ This shift towards asynchronous access to data requires implementation changes a
 
 **3) Data stores stay private**
 
-Data stores are not anymore accessed directly by other micro-services. However, data changes are populating the data log pipeline asynchronously, making data access for other services available for consumption.
+Data stores are not anymore accessed directly by other microservices. However, data changes are populating the data log pipeline asynchronously, making data access for other services available for consumption.
 
 For example, a new service like a search engine can be plugged to the data pipeline to index documents in its own data structure at its own pace. Moreover, this search service is not bind to a specific data store, but can index any data it needs.
 
-Although other micro-services could potentially publish an update event of a model it does not own, this is strongly not recommended. Following the [_Single Writer Principle_](https://mechanical-sympathy.blogspot.fr/2011/09/single-writer-principle.html){:target='_blank'}, only the service in charge of a business model should alter the data.
+Although other microservices could potentially publish an update event of a model it does not own, this is strongly not recommended. Following the [_Single Writer Principle_](https://mechanical-sympathy.blogspot.fr/2011/09/single-writer-principle.html){:target='_blank'}, only the service in charge of a business model should alter the data.
 
 The data pipeline also comes with some security features, to communicate with it securely and to manage ACLs on the different queues (who is authorized to read / write etc).
 
@@ -149,4 +150,4 @@ You can also plug some real-time processing engine on it, ingesting and working 
 
 There are obviously some drawbacks to this solution. Adding this data log pipeline is more complex than a monolithic app with ACID transactions. Also, there is a need to implement compensating transactions to recover from app-level failures, there could be temporary inconsistencies because some data are not consumed / updated yet, and subscribers must detect and ignore duplicate events.
 
-Using a data log pipeline like Kafka makes decoupling of micro-services a reality. The traffic is amortized with a queuing system. The micro-services are really independent and can evolve on their own, while at the same time, sharing their data for any service (current or future) to use.
+Using a data log pipeline like Kafka makes decoupling of microservices a reality. The traffic is amortized with a queuing system. The microservices are really independent and can evolve on their own, while at the same time, sharing their data for any service (current or future) to use.
