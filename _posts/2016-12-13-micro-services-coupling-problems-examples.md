@@ -4,7 +4,7 @@ date: 2016-12-13 14:45:42 +0100
 title: Microservices coupling problems examples
 comments: true
 categories: microservices coupling problems kafka data pipeline
-description:
+description: Microservices architecture can creates coupling problems. We will see through examples how to correctly do it with Kafka.
 ---
 ## Abstract
 
