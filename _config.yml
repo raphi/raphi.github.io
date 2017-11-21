@@ -17,7 +17,7 @@ title: ./YADEB --help
 email:
 description: " "
 author: "Raphaël Daguenet"
-permalink: /:year/:month/:day/:title/
+permalink: :title.html
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://raphi.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 github: [metadata]
