@@ -14,8 +14,9 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 title: ./YADEB --help
+encoding: UTF-8
 email:
-description: " "
+description: "Developer Blog Blabling"
 author: "Raphaël Daguenet"
 permalink: :title.html
 baseurl: "" # the subpath of your site, e.g. /blog
