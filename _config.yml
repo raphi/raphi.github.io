@@ -20,6 +20,7 @@ author: "Raphaël Daguenet"
 permalink: /:year/:month/:day/:title/
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://raphi.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+github: [metadata]
 github_username: raphi
 google_analytics: UA-24254357-7
 disqus:
