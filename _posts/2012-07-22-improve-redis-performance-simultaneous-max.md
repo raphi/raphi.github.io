@@ -2,7 +2,7 @@
 layout: post
 date: '2012-07-22T14:50:00+02:00'
 title: 'Improve Redis performance: simultaneous max clients'
-description: 'How to increase Redis maximum clients number'
+description: How to increase Redis maximum clients number with ulimit to increase file descriptors
 comments: true
 tags:
 - 'max number of clients reached'
@@ -12,6 +12,8 @@ tags:
 - 'ulimit'
 tumblr_url: http://yadeb.tumblr.com/post/27775570494/improve-redis-performance-simultaneous-max
 ---
+# Improve Redis performance: simultaneous max clients
+
 One day at work, we had to handle a DDoS attack. While I was investigating the problem, I saw that our Redis server was refusing new connections saying “max number of clients reached”.
 
 Of course, this was due to the huge amount of requests received (200K / sec) but Redis could handle only 1024 simultaneous clients compared to what’s in the documentation (10000). The problem was not Redis but our server configuration.
